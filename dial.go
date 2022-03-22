@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"time"
-
-	rerror "github.com/Prolht/requests/error"
 )
 
 const MaxDuration = 1<<31 - 1
@@ -55,7 +53,7 @@ func getDialer() *net.Dialer {
 
 func checkProxyAddr(proxyAddr string) (u *url.URL, err error) {
 	if proxyAddr == "" {
-		return nil, rerror.NewErrProxyAddrEmpty()
+		return nil, NewErrProxyAddrEmpty()
 	}
 	host, port, err := net.SplitHostPort(proxyAddr)
 	if err == nil {
