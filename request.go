@@ -24,63 +24,27 @@ type request struct {
 	ProxyFunc func(*http.Request) (*url.URL, error)
 }
 
-func NewRequest() *request {
-	h := &request{
+func NewRequest(method string, url string, body interface{}) *request {
+	r := &request{
 		Client: http.Client{
 			Timeout: 30 * time.Second,
 		},
 		UserAgent: DefaultUserAgent,
 	}
-	h.Client.Jar, _ = cookiejar.New(nil)
-	h.lazyInit()
-	return h
+	r.Client.Jar, _ = cookiejar.New(nil)
+	r.lazyInit()
+	r.prepareRequest(method, url, body)
+	return r
 }
 
-func (r *request) GET(url string) ([]byte, *http.Response, error) {
-	err := r.prepareRequest("GET", url, nil)
-	if err != nil {
-		return []byte{}, nil, err
-	}
-	respBy, resp, err := r.Do()
+func (r *request)Do()([]byte, *http.Response, error){
+	respBy, resp, err := r.do()
 	if err != nil {
 		return respBy, resp, err
 	}
 	return respBy, resp, nil
 }
 
-func (r *request) POST(url string, body interface{}) ([]byte, *http.Response, error) {
-	err := r.prepareRequest("POST", url, body)
-	if err != nil {
-		return []byte{}, nil, err
-	}
-	respBy, resp, err := r.Do()
-	if err != nil {
-		return respBy, resp, err
-	}
-	return respBy, resp, nil
-}
-func (r *request) PUT(url string, body interface{}) ([]byte, *http.Response, error) {
-	err := r.prepareRequest("PUT", url, body)
-	if err != nil {
-		return []byte{}, nil, err
-	}
-	respBy, resp, err := r.Do()
-	if err != nil {
-		return respBy, resp, err
-	}
-	return respBy, resp, nil
-}
-func (r *request) DELETE(url string, body interface{}) ([]byte, *http.Response, error) {
-	err := r.prepareRequest("DELETE", url, body)
-	if err != nil {
-		return []byte{}, nil, err
-	}
-	respBy, resp, err := r.Do()
-	if err != nil {
-		return respBy, resp, err
-	}
-	return respBy, resp, nil
-}
 
 func (r *request) lazyInit() {
 	if r.transport == nil {
@@ -225,7 +189,7 @@ func (r *request) prepareRequest(method string, url string, body interface{}) er
 	return nil
 }
 
-func (r *request) Do() ([]byte, *http.Response, error) {
+func (r *request) do() ([]byte, *http.Response, error) {
 	resp, err := r.Client.Do(r.req)
 	if err != nil {
 		return []byte{}, nil, err
