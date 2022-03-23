@@ -1,3 +1,3 @@
-module github.com/Prolht/requests
+module github.com/Lmineor/requests
 
 go 1.15
