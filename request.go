@@ -32,6 +32,7 @@ func NewRequest() *request {
 		UserAgent: DefaultUserAgent,
 	}
 	h.Client.Jar, _ = cookiejar.New(nil)
+	h.lazyInit()
 	return h
 }
 
