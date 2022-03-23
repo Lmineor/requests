@@ -37,14 +37,13 @@ func NewRequest(method string, url string, body interface{}) *request {
 	return r
 }
 
-func (r *request)Do()([]byte, *http.Response, error){
+func (r *request) Do() ([]byte, *http.Response, error) {
 	respBy, resp, err := r.do()
 	if err != nil {
 		return respBy, resp, err
 	}
 	return respBy, resp, nil
 }
-
 
 func (r *request) lazyInit() {
 	if r.transport == nil {
