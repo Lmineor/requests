@@ -6,8 +6,15 @@ const (
 )
 
 const (
-	GET    = "GET"
-	POST   = "POST"
-	PUT    = "PUT"
-	DELETE = "DELETE"
+	GET     = "GET"
+	POST    = "POST"
+	PUT     = "PUT"
+	DELETE  = "DELETE"
+	OPTIONS = "OPTIONS"
+	PATCH   = "PATCH"
+)
+
+const (
+	Https = "https"
+	Http  = "http"
 )

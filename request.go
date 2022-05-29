@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 )
@@ -24,17 +25,21 @@ type request struct {
 	ProxyFunc func(*http.Request) (*url.URL, error)
 }
 
-func NewRequest(method string, url string, body interface{}) *request {
+func NewRequest(method string, url string, body interface{}) (*request, error) {
+	normalizedMethod, normalizedUrl, err := validateParams(method, url)
+	if err != nil {
+		return nil, err
+	}
 	r := &request{
 		Client: http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: 20 * time.Second,
 		},
 		UserAgent: DefaultUserAgent,
 	}
 	r.Client.Jar, _ = cookiejar.New(nil)
 	r.lazyInit()
-	r.prepareRequest(method, url, body)
-	return r
+	r.prepareRequest(normalizedMethod, normalizedUrl, body)
+	return r, nil
 }
 
 func (r *request) Do() ([]byte, *http.Response, error) {
@@ -200,4 +205,35 @@ func (r *request) do() ([]byte, *http.Response, error) {
 		return respBody, resp, err
 	}
 	return respBody, resp, nil
+}
+
+func validateParams(method string, url string) (normalizedMethod, normalizedUl string, err error) {
+	if method == "" {
+		err = fmt.Errorf("empty method")
+	}
+	if url == "" {
+		err = fmt.Errorf("empty url")
+	}
+
+	normalizedMethod = strings.ToUpper(method)
+	switch normalizedMethod {
+	case GET, POST, PUT, DELETE, OPTIONS, PATCH:
+	default:
+		err = fmt.Errorf("UnSupported method %s", url)
+	}
+
+	splitUrl := strings.Split(url, ":")
+	if len(splitUrl) < 1 {
+		normalizedUl = fmt.Sprintf("%s://%s", Http, url)
+	} else {
+		protocol := splitUrl[0]
+		switch protocol {
+		case Http, Https:
+			normalizedUl = url
+		default:
+			err = fmt.Errorf("unsupport protocol <%s>, expect [%s]", protocol, strings.Join([]string{Http, Https}, ","))
+		}
+	}
+
+	return normalizedMethod, normalizedUl, err
 }
