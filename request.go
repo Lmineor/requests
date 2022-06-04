@@ -133,25 +133,34 @@ func (r *request) SetGzip(b bool) {
 	r.transport.DisableCompression = !b
 }
 
-// SetResponseHeaderTimeout 设置目标服务器响应超时时间
-func (r *request) SetResponseHeaderTimeout(t time.Duration) {
+// SetResponseHeaderTimeout 设置目标服务器响应超时时间，单位为s
+func (r *request) SetResponseHeaderTimeout(t int64) {
+	if t == 0 {
+		panic("ResponseHeaderTimeout should not be zero")
+	}
 	r.l.Lock()
 	defer r.l.Unlock()
-	r.transport.ResponseHeaderTimeout = t
+	r.transport.ResponseHeaderTimeout = time.Duration(t) * time.Second
 }
 
 // SetTLSHandshakeTimeout 设置tls握手超时时间
-func (r *request) SetTLSHandshakeTimeout(t time.Duration) {
+func (r *request) SetTLSHandshakeTimeout(t int64) {
+	if t == 0 {
+		panic("HandshakeTimeout should not be zero")
+	}
 	r.l.Lock()
 	defer r.l.Unlock()
-	r.transport.TLSHandshakeTimeout = t
+	r.transport.TLSHandshakeTimeout = time.Duration(t) * time.Second
 }
 
-// SetTimeout 设置 http 请求超时时间, 默认30s
-func (r *request) SetTimeout(t time.Duration) {
+// SetTimeout 设置 http 请求超时时间，单位为s
+func (r *request) SetTimeout(t int64) {
+	if t == 0 {
+		panic("request timeout should not be zero")
+	}
 	r.l.Lock()
 	defer r.l.Unlock()
-	r.Client.Timeout = t
+	r.Client.Timeout = time.Duration(t) * time.Second
 }
 
 // SetHeader 设置 http 请求header
@@ -168,11 +177,7 @@ func (r *request) setDefaultHeader() {
 	r.SetHeader("Content-Type", MimeJSON)
 	r.SetHeader("Accept", MimeJSON)
 }
-func (r *request) setProxyFunc(f func(*http.Request) (*url.URL, error)) {
-	r.l.Lock()
-	defer r.l.Unlock()
-	r.ProxyFunc = f
-}
+
 func (r *request) prepareRequest(method string, url string, body interface{}) error {
 	r.lazyInit()
 	var reqBody io.Reader
@@ -223,7 +228,7 @@ func validateParams(method string, url string) (normalizedMethod, normalizedUl s
 	}
 
 	splitUrl := strings.Split(url, ":")
-	if len(splitUrl) < 1 {
+	if len(splitUrl) < 2 {
 		normalizedUl = fmt.Sprintf("%s://%s", Http, url)
 	} else {
 		protocol := splitUrl[0]

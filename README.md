@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	req := requests.NewRequest(requests.GET, "https://www.baidu.com", nil)
+	req, err := requests.NewRequest(requests.GET, "https://www.baidu.com", nil)
 	body, _, err := req.Do()
 
 	fmt.Println(string(body))
