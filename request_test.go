@@ -12,7 +12,7 @@ func TestRequests(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	req.SetProxy("99.0.85.1:808")
+	//req.SetProxy("99.0.85.1:808")
 	//req.SetTimeout(0)
 	body, _, err := req.Do()
 

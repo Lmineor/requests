@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-type request struct {
+type Request struct {
 	http.Client
 	req       *http.Request
 	l         sync.Mutex
@@ -25,12 +25,12 @@ type request struct {
 	ProxyFunc func(*http.Request) (*url.URL, error)
 }
 
-func NewRequest(method string, url string, body interface{}) (*request, error) {
+func NewRequest(method string, url string, body interface{}) (*Request, error) {
 	normalizedMethod, normalizedUrl, err := validateParams(method, url)
 	if err != nil {
 		return nil, err
 	}
-	r := &request{
+	r := &Request{
 		Client: http.Client{
 			Timeout: 20 * time.Second,
 		},
@@ -42,7 +42,7 @@ func NewRequest(method string, url string, body interface{}) (*request, error) {
 	return r, nil
 }
 
-func (r *request) Do() ([]byte, *http.Response, error) {
+func (r *Request) Do() ([]byte, *http.Response, error) {
 	respBy, resp, err := r.do()
 	if err != nil {
 		return respBy, resp, err
@@ -50,7 +50,7 @@ func (r *request) Do() ([]byte, *http.Response, error) {
 	return respBy, resp, nil
 }
 
-func (r *request) lazyInit() {
+func (r *Request) lazyInit() {
 	if r.transport == nil {
 		r.transport = &http.Transport{
 			Proxy:       proxyFunc,
@@ -71,14 +71,14 @@ func (r *request) lazyInit() {
 }
 
 // SetUserAgent 设置user agent 标识
-func (r *request) SetUserAgent(ua string) {
+func (r *Request) SetUserAgent(ua string) {
 	r.l.Lock()
 	defer r.l.Unlock()
 	r.UserAgent = ua
 }
 
 // SetProxy 设置代理
-func (r *request) SetProxy(proxyAddr string) {
+func (r *Request) SetProxy(proxyAddr string) {
 	r.l.Lock()
 	defer r.l.Unlock()
 	r.lazyInit()
@@ -91,14 +91,14 @@ func (r *request) SetProxy(proxyAddr string) {
 }
 
 // SetCookiejar 设置cookie
-func (r *request) SetCookiejar(jar http.CookieJar) {
+func (r *Request) SetCookiejar(jar http.CookieJar) {
 	r.l.Lock()
 	defer r.l.Unlock()
 	r.Client.Jar = jar
 }
 
 // ResetCookiejar 清空cookie
-func (r *request) ResetCookiejar() {
+func (r *Request) ResetCookiejar() {
 	r.l.Lock()
 	defer r.l.Unlock()
 
@@ -106,7 +106,7 @@ func (r *request) ResetCookiejar() {
 }
 
 // SetHttpSecure 是否启用 https 安全检查, 默认不检查
-func (r *request) SetHttpSecure(b bool) {
+func (r *Request) SetHttpSecure(b bool) {
 	r.l.Lock()
 	defer r.l.Unlock()
 	r.https = b
@@ -120,21 +120,21 @@ func (r *request) SetHttpSecure(b bool) {
 }
 
 // SetKeepAlive 设置 Keep-Alive
-func (r *request) SetKeepAlive(b bool) {
+func (r *Request) SetKeepAlive(b bool) {
 	r.l.Lock()
 	defer r.l.Unlock()
 	r.transport.DisableKeepAlives = !b
 }
 
 // SetGzip 是否启用Gzip
-func (r *request) SetGzip(b bool) {
+func (r *Request) SetGzip(b bool) {
 	r.l.Lock()
 	defer r.l.Unlock()
 	r.transport.DisableCompression = !b
 }
 
 // SetResponseHeaderTimeout 设置目标服务器响应超时时间，单位为s
-func (r *request) SetResponseHeaderTimeout(t int64) {
+func (r *Request) SetResponseHeaderTimeout(t int64) {
 	if t == 0 {
 		panic("ResponseHeaderTimeout should not be zero")
 	}
@@ -144,7 +144,7 @@ func (r *request) SetResponseHeaderTimeout(t int64) {
 }
 
 // SetTLSHandshakeTimeout 设置tls握手超时时间
-func (r *request) SetTLSHandshakeTimeout(t int64) {
+func (r *Request) SetTLSHandshakeTimeout(t int64) {
 	if t == 0 {
 		panic("HandshakeTimeout should not be zero")
 	}
@@ -154,7 +154,7 @@ func (r *request) SetTLSHandshakeTimeout(t int64) {
 }
 
 // SetTimeout 设置 http 请求超时时间，单位为s
-func (r *request) SetTimeout(t int64) {
+func (r *Request) SetTimeout(t int64) {
 	if t == 0 {
 		panic("request timeout should not be zero")
 	}
@@ -164,7 +164,7 @@ func (r *request) SetTimeout(t int64) {
 }
 
 // SetHeader 设置 http 请求header
-func (r *request) SetHeader(key, value string) {
+func (r *Request) SetHeader(key, value string) {
 	if key == "" {
 		panic("request header's key should not be empty")
 	}
@@ -173,12 +173,12 @@ func (r *request) SetHeader(key, value string) {
 	r.req.Header.Set(key, value)
 }
 
-func (r *request) setDefaultHeader() {
+func (r *Request) setDefaultHeader() {
 	r.SetHeader("Content-Type", MimeJSON)
 	r.SetHeader("Accept", MimeJSON)
 }
 
-func (r *request) prepareRequest(method string, url string, body interface{}) error {
+func (r *Request) prepareRequest(method string, url string, body interface{}) error {
 	r.lazyInit()
 	var reqBody io.Reader
 	if body == nil {
@@ -198,7 +198,7 @@ func (r *request) prepareRequest(method string, url string, body interface{}) er
 	return nil
 }
 
-func (r *request) do() ([]byte, *http.Response, error) {
+func (r *Request) do() ([]byte, *http.Response, error) {
 	resp, err := r.Client.Do(r.req)
 	if err != nil {
 		return []byte{}, nil, err
